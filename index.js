@@ -5,50 +5,36 @@ const express = require('express');
 const app = express();
 const port = process.env.PORT || 10000;
 
-app.get('/', (req, res) => res.send('<h1>💎 GOD MODE BOT ACTIVE</h1>'));
+app.get('/', (req, res) => res.send('<h1>🤖 SYSTEM IDENTITY BOT ACTIVE</h1>'));
 
-app.listen(port, '0.0.0.0', () => console.log(`🚀 Server running on port ${port}`));
+app.listen(port, '0.0.0.0', () => console.log(`🚀 System Online on port ${port}`));
 
-// --- 2. BOT CONFIG ---
+// --- 2. CONFIGURATION ---
 const token = '8507736406:AAEatnjG-ChvUO2uqRP9MBgcfyvV3W324O4'; 
 const bot = new TelegramBot(token, {polling: true});
 
-// --- 3. ADVANCED LOGIC BRAIN ---
+// --- 3. SYSTEM LOGIC (CALCULATION CORE) ---
 
-// 1. Birthstone & Flower Logic
-function getMysticInfo(m) {
-    const stones = ["Garnet", "Amethyst", "Aquamarine", "Diamond", "Emerald", "Pearl", "Ruby", "Peridot", "Sapphire", "Opal", "Topaz", "Turquoise"];
-    const flowers = ["Carnation", "Violet", "Daffodil", "Daisy", "Lily", "Rose", "Larkspur", "Gladiolus", "Aster", "Marigold", "Chrysanthemum", "Narcissus"];
-    return { stone: stones[m-1], flower: flowers[m-1] };
-}
-
-// 2. Zodiac Element (Fire, Water, Air, Earth)
-function getElement(zodiacName) {
-    if (zodiacName.includes("Aries") || zodiacName.includes("Leo") || zodiacName.includes("Sagittarius")) return "🔥 Fire";
-    if (zodiacName.includes("Taurus") || zodiacName.includes("Virgo") || zodiacName.includes("Capricorn")) return "🌍 Earth";
-    if (zodiacName.includes("Gemini") || zodiacName.includes("Libra") || zodiacName.includes("Aquarius")) return "💨 Air";
-    return "💧 Water";
-}
-
-// 3. 10,000 Days Milestone Calculator
-function getNextMilestone(birthDate, totalDays) {
-    const nextBig = Math.ceil((totalDays + 1) / 1000) * 1000; // Next multiple of 1000
-    const diff = nextBig - totalDays;
-    const milestoneDate = new Date();
-    milestoneDate.setDate(milestoneDate.getDate() + diff);
-    return { days: nextBig, date: milestoneDate.toLocaleDateString('en-GB') };
-}
-
-// 4. Standard Helpers
+// Helpers
 function isValidDate(d, m, y) {
     const date = new Date(y, m - 1, d);
     return date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d;
 }
 
-function getZodiac(d, m) {
+function getZodiacInfo(d, m) {
     const signs = [
-        "♑ Capricorn", "♒ Aquarius", "♓ Pisces", "♈ Aries", "♉ Taurus", "♊ Gemini", 
-        "♋ Cancer", "♌ Leo", "♍ Virgo", "♎ Libra", "♏ Scorpio", "♐ Sagittarius"
+        { name: "CAPRICORN", symbol: "♑", element: "EARTH [🌍]", core: "Garnet" },
+        { name: "AQUARIUS", symbol: "♒", element: "AIR [💨]", core: "Amethyst" },
+        { name: "PISCES", symbol: "♓", element: "WATER [💧]", core: "Aquamarine" },
+        { name: "ARIES", symbol: "♈", element: "FIRE [🔥]", core: "Diamond" },
+        { name: "TAURUS", symbol: "♉", element: "EARTH [🌍]", core: "Emerald" },
+        { name: "GEMINI", symbol: "♊", element: "AIR [💨]", core: "Pearl" },
+        { name: "CANCER", symbol: "♋", element: "WATER [💧]", core: "Ruby" },
+        { name: "LEO", symbol: "♌", element: "FIRE [🔥]", core: "Peridot" },
+        { name: "VIRGO", symbol: "♍", element: "EARTH [🌍]", core: "Sapphire" },
+        { name: "LIBRA", symbol: "♎", element: "AIR [💨]", core: "Opal" },
+        { name: "SCORPIO", symbol: "♏", element: "WATER [💧]", core: "Topaz" },
+        { name: "SAGITTARIUS", symbol: "♐", element: "FIRE [🔥]", core: "Turquoise" }
     ];
     const cutoff = [20, 19, 21, 20, 21, 22, 23, 23, 23, 23, 22, 22];
     let i = (d >= cutoff[m - 1]) ? m : m - 1;
@@ -56,61 +42,94 @@ function getZodiac(d, m) {
     return signs[i];
 }
 
-// --- MAIN CALCULATOR ---
-function calculateGodMode(d, m, y) {
-    if (!isValidDate(d, m, y)) return { error: "❌ Invalid Date." };
+function getMilestone(totalDays) {
+    // Pichla milestone (e.g. 6000) aur Agla (e.g. 7000)
+    const nextMilestone = Math.ceil((totalDays + 1) / 1000) * 1000;
+    const daysRemaining = nextMilestone - totalDays;
+    
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + daysRemaining);
+    
+    return {
+        nextTarget: nextMilestone.toLocaleString(),
+        date: futureDate.toLocaleDateString('en-GB') // DD/MM/YYYY format
+    };
+}
+
+function getLevelProgress(d, m) {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    
+    // Pichla Birthday
+    let lastBday = new Date(currentYear, m - 1, d);
+    if (lastBday > today) lastBday.setFullYear(currentYear - 1);
+    
+    // Agla Birthday
+    let nextBday = new Date(lastBday.getFullYear() + 1, m - 1, d);
+    
+    const totalYearDays = (nextBday - lastBday) / (1000 * 60 * 60 * 24);
+    const daysPassed = (today - lastBday) / (1000 * 60 * 60 * 24);
+    
+    const percentage = Math.floor((daysPassed / totalYearDays) * 100);
+    const daysLeft = Math.ceil((nextBday - today) / (1000 * 60 * 60 * 24));
+    
+    // Bar Logic (10 blocks)
+    const filled = Math.floor(percentage / 10);
+    const empty = 10 - filled;
+    const bar = "█".repeat(filled) + "░".repeat(empty);
+    
+    return { percent: percentage, bar: bar, daysLeft: daysLeft };
+}
+
+// Main Calculator
+function calculateSystemStats(d, m, y, userName) {
+    if (!isValidDate(d, m, y)) return { error: "⚠️ <b>SYSTEM ERROR:</b> Invalid Date Sequence." };
     
     const today = new Date();
-    const birth = new Date(year = y, month = m - 1, day = d);
-    if (birth > today) return { error: "🔮 Future date not allowed!" };
+    const birth = new Date(y, m - 1, d);
+    if (birth > today) return { error: "⚠️ <b>SYSTEM ERROR:</b> Future Timeline Detected." };
 
-    // Basic Age
+    // Uptime Calculation
     let ageYears = today.getFullYear() - birth.getFullYear();
     let ageMonths = today.getMonth() - birth.getMonth();
     let ageDays = today.getDate() - birth.getDate();
+
     if (ageDays < 0) { ageMonths--; ageDays += new Date(today.getFullYear(), today.getMonth(), 0).getDate(); }
     if (ageMonths < 0) { ageYears--; ageMonths += 12; }
 
-    // Advanced Stats
+    // Biometrics Math
     const diffTime = Math.abs(today - birth);
     const totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     const totalMinutes = Math.floor(diffTime / (1000 * 60));
     
-    // Bio Stats (Averages)
-    const heartbeats = (totalMinutes * 80).toLocaleString(); // Avg 80 bpm
-    const breaths = (totalMinutes * 16).toLocaleString();   // Avg 16 bpm
-    const sleep = Math.floor(totalDays / 3).toLocaleString(); // 1/3 of life spent sleeping
-
-    // Milestones
-    const milestone = getNextMilestone(birth, totalDays);
-    const mystic = getMysticInfo(m);
-    const zodiac = getZodiac(d, m);
+    // Data Points
+    const zodiac = getZodiacInfo(d, m);
+    const progress = getLevelProgress(d, m);
+    const milestone = getMilestone(totalDays);
     
-    // Birthday Countdown
-    let nextBday = new Date(today.getFullYear(), m - 1, d);
-    if (nextBday < today) nextBday.setFullYear(today.getFullYear() + 1);
-    const daysToBday = Math.ceil(Math.abs(nextBday - today) / (1000 * 60 * 60 * 24));
-
     return {
-        dob: `${d}-${m}-${y}`,
-        dayName: birth.toLocaleDateString('en-US', { weekday: 'long' }),
-        age: `${ageYears}y ${ageMonths}m ${ageDays}d`,
-        totalDays: totalDays.toLocaleString(),
-        heartbeats, breaths, sleep,
-        zodiac,
-        element: getElement(zodiac),
-        stone: mystic.stone,
-        flower: mystic.flower,
-        milestoneDays: milestone.days.toLocaleString(),
-        milestoneDate: milestone.date,
-        nextBday: daysToBday
+        name: userName,
+        uptime: `${ageYears}Y ${ageMonths.toString().padStart(2, '0')}M ${ageDays.toString().padStart(2, '0')}D`,
+        level: ageYears,
+        percent: progress.percent,
+        bar: progress.bar,
+        xpToNext: progress.daysLeft,
+        heart: (totalMinutes * 72).toLocaleString(), // 72 bpm avg
+        air: (totalMinutes * 15).toLocaleString(),  // 15 breaths avg
+        recharge: Math.floor(totalDays / 3).toLocaleString(), // Sleep cycles
+        zodiacCode: zodiac.name,
+        zodiacSymbol: zodiac.symbol,
+        mode: zodiac.element,
+        core: zodiac.core,
+        nextMilestone: milestone.nextTarget,
+        milestoneDate: milestone.date
     };
 }
 
-// --- 4. MESSAGE HANDLERS ---
+// --- 4. MESSAGE HANDLER ---
 
 bot.onText(/\/start/, (msg) => {
-    bot.sendMessage(msg.chat.id, "💎 **GOD MODE ACTIVATED**\n\nBhejo apni DOB (e.g., `31-03-2008`) aur dekho jalwa! 😎", { parse_mode: 'Markdown' });
+    bot.sendMessage(msg.chat.id, "⌬ <b>SYSTEM READY</b>\nInitialize by sending DOB: <code>DD-MM-YYYY</code>", { parse_mode: 'HTML' });
 });
 
 bot.on('message', async (msg) => {
@@ -121,51 +140,60 @@ bot.on('message', async (msg) => {
 
     if (match) {
         const d = parseInt(match[1]), m = parseInt(match[2]), y = parseInt(match[3]);
-        const data = calculateGodMode(d, m, y);
+        // HTML characters escape karne ke liye name clean kiya
+        const cleanName = msg.from.first_name.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        
+        const data = calculateSystemStats(d, m, y, cleanName);
         
         if (data.error) {
-             bot.sendMessage(msg.chat.id, data.error);
+             bot.sendMessage(msg.chat.id, data.error, { parse_mode: 'HTML' });
              return;
         }
 
-        // --- THE GOD LEVEL DESIGN ---
+        // --- THE PRO SYSTEM IDENTITY DESIGN ---
         const response = `
-╭━━━━━━━━━━━━━━━━━━━╮
-      🧬 **LIFE PROFILE ANALYZER** 
-╰━━━━━━━━━━━━━━━━━━━╯
-📅 **Origin:** ${data.dob} (${data.dayName})
-🎂 **Level:** ${data.age}
+⌬ 𝗦𝗬𝗦𝗧𝗘𝗠 𝗜𝗗𝗘𝗡𝗧𝗜𝗧𝗬: 𝗩𝗘𝗥𝗜𝗙𝗜𝗘𝗗 ⌬
+━━━━━━━━━━━━━━━━━━━━━━
+👤 <b>${data.name.toUpperCase()}</b>
+🧬 <b>Species:</b> Human (Legend Class)
+⏳ <b>Uptime:</b> <code>${data.uptime}</code>
 
-╭── ⚡ **BIOLOGICAL ENGINE** ──
-│ ❤️ Heartbeats: ${data.heartbeats}
-│ 🌬️ Breaths: ${data.breaths}
-│ 💤 Slept for: ${data.sleep} Days
-╰───────────────────────
+╭── 🔋 𝗟𝗜𝗙𝗘 𝗣𝗥𝗢𝗚𝗥𝗘𝗦𝗦 ───╮
+│ <b>LEVEL ${data.level}</b>    [${data.bar}] ${data.percent}% │
+│ 🆙 <b>XP to Lvl ${data.level + 1}:</b> <code>${data.xpToNext} Days</code>  │
+╰───────────────────────╯
 
-╭── 🔮 **MYSTIC AURA** ──
-│ 🌌 Zodiac: ${data.zodiac}
-│ ⚔️ Element: ${data.element}
-│ 💎 Gem: ${data.stone}
-│ 🌸 Soul Flower: ${data.flower}
-╰───────────────────────
+⚡ 𝐁𝐈𝐎𝐌𝐄𝐓𝐑𝗜𝐂 𝐓𝐄𝐋𝐄𝐌𝐄𝐓𝐑𝐘
+├ 💓 <b>Heart Engine:</b> <code>${data.heart}</code>
+├ 🌬️ <b>Air Intake:</b>  <code>${data.air}</code>
+└ 🔋 <b>Recharge:</b>    <code>${data.recharge} Cycles</code>
 
-╭── 🏆 **NEXT UNLOCKS** ──
-│ 🎉 Next B'day: in **${data.nextBday}** Days
-│ 🎖️ **${data.milestoneDays}th Day** on:
-│ 📅 ${data.milestoneDate}
-╰───────────────────────
+🔮 𝐀𝐒𝐓𝐑𝐀𝐋 𝐒𝐈𝐆𝐍𝐀𝐓𝐔𝐑𝐄
+▸ 🌌 <b>Code:</b> <code>${data.zodiacCode} [${data.zodiacSymbol}]</code>
+▸ ⚔️ <b>Mode:</b> <code>${data.mode}</code>
+▸ 💠 <b>Core:</b> <code>${data.core}</code>
 
-_Designed for Legends 👑_
+🏆 𝐌𝐈𝐋𝐄𝐒𝐓𝐎𝐍𝐄 𝐓𝐑𝐀𝐂𝐊𝐄𝐑
+[✅] System Initialized (Born)
+[⏳] <b>${data.nextMilestone} Days:</b> <code>${data.milestoneDate}</code>
+
+━━━━━━━━━━━━━━━━━━━━━━
+🛠 <b>SYSTEM ARCHITECT</b>
+👨‍💻 <b>Dev:</b> Rahul Kumar Singh
+🆔 <b>Ref:</b> @Rksingh192
+━━━━━━━━━━━━━━━━━━━━━━
+🤖 <i>Analysis Complete. Legacy Loading...</i>
 `;
 
+        // Typing Action (Realistic feel)
         bot.sendChatAction(msg.chat.id, 'typing');
         setTimeout(() => {
             bot.sendMessage(msg.chat.id, response, { 
-                parse_mode: 'Markdown',
+                parse_mode: 'HTML',
                 reply_markup: {
-                    inline_keyboard: [[{ text: "📤 Share My Profile", switch_inline_query: `I am ${data.totalDays} days old!` }]]
+                    inline_keyboard: [[{ text: "📡 Share System ID", switch_inline_query: `Level ${data.level} Verified!` }]]
                 }
             });
-        }, 1000);
+        }, 800);
     }
 });
