@@ -1,25 +1,40 @@
 const TelegramBot = require('node-telegram-bot-api');
 const express = require('express');
 
-// --- SERVER SETUP (Render ke liye zaroori hai) ---
+// --- 1. SERVER SETUP (Render ko zinda rakhne ke liye) ---
 const app = express();
 const port = process.env.PORT || 10000;
 
-app.get('/', (req, res) => res.send('Bot is Alive!'));
+app.get('/', (req, res) => res.send('<h1>Bot is Online & Running! 🟢</h1>'));
 
 app.listen(port, '0.0.0.0', () => {
-    console.log(`Server is running on port ${port}`);
+    console.log(`✅ Server is running on port ${port}`);
 });
 
-// --- BOT SETUP ---
-// Token verify kar lena
+// --- 2. ANTI-CRASH SYSTEM (Ye zaroori hai) ---
+process.on('uncaughtException', (err) => {
+    console.log('❌ Error pakda gaya:', err.message);
+    // Bot band nahi hoga
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.log('❌ Promise Fail:', reason);
+    // Bot band nahi hoga
+});
+
+// --- 3. BOT SETUP ---
 const token = '8507736406:AAEatnjG-ChvUO2uqRP9MBgcfyvV3W324O4'; 
 const bot = new TelegramBot(token, {polling: true});
 
-// --- CRASH ROKNE WALA CODE (Polling Error Fix) ---
-bot.on("polling_error", (err) => console.log("Polling Error:", err.code));
+// Purana Webhook delete karo taaki Polling error na aaye
+bot.deleteWebHook().then(() => {
+    console.log("🔄 Old Webhook Deleted. Polling Started.");
+});
 
-// --- LOGIC ---
+// Polling Error Handler
+bot.on("polling_error", (err) => console.log("⚠️ Telegram Connection Error:", err.code));
+
+// --- 4. LOGIC BRAIN ---
 function isValidDate(d, m, y) {
     const date = new Date(y, m - 1, d);
     return date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d;
@@ -34,27 +49,27 @@ function getZodiac(d, m) {
 }
 
 function calculateGodMode(d, m, y) {
-    if (!isValidDate(d, m, y)) return { error: "❌ Invalid Date." };
+    if (!isValidDate(d, m, y)) return { error: "❌ Invalid Date. Check Leap Year or 30/31 days." };
     const today = new Date();
-    const birth = new Date(y, m - 1, d);
+    const birth = new Date(year = y, month = m - 1, day = d);
     if (birth > today) return { error: "🔮 Future date not allowed!" };
 
     let ageYears = today.getFullYear() - birth.getFullYear();
     let ageMonths = today.getMonth() - birth.getMonth();
     let ageDays = today.getDate() - birth.getDate();
-    
     if (ageDays < 0) { ageMonths--; ageDays += new Date(today.getFullYear(), today.getMonth(), 0).getDate(); }
     if (ageMonths < 0) { ageYears--; ageMonths += 12; }
 
     const diffTime = Math.abs(today - birth);
     const totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     
-    // Milestones
+    // Stats
+    const totalMinutes = Math.floor(diffTime / (1000 * 60));
     const nextBig = Math.ceil((totalDays + 1) / 1000) * 1000;
     const milestoneDate = new Date();
     milestoneDate.setDate(milestoneDate.getDate() + (nextBig - totalDays));
 
-    // Next Bday
+    // Next Birthday
     let nextBday = new Date(today.getFullYear(), m - 1, d);
     if (nextBday < today) nextBday.setFullYear(today.getFullYear() + 1);
     const daysToBday = Math.ceil(Math.abs(nextBday - today) / (1000 * 60 * 60 * 24));
@@ -64,25 +79,34 @@ function calculateGodMode(d, m, y) {
         age: `${ageYears}y ${ageMonths}m ${ageDays}d`,
         totalDays: totalDays.toLocaleString(),
         zodiac: getZodiac(d, m),
+        heartbeats: (totalMinutes * 80).toLocaleString(),
         nextBday: daysToBday,
         milestoneDays: nextBig.toLocaleString(),
         milestoneDate: milestoneDate.toLocaleDateString('en-GB')
     };
 }
 
-// --- COMMANDS ---
+// --- 5. COMMANDS ---
 bot.onText(/\/start/, (msg) => {
-    bot.sendMessage(msg.chat.id, "💎 **GOD MODE ACTIVATED**\nApni DOB bhejo (e.g., `15-08-2000`)", { parse_mode: 'Markdown' });
+    bot.sendMessage(msg.chat.id, "💎 **GOD MODE ONLINE**\nBhejo apni DOB: `DD-MM-YYYY`", { parse_mode: 'Markdown' });
 });
 
 bot.on('message', async (msg) => {
     if (msg.text && msg.text.startsWith('/')) return;
-    const match = msg.text.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
-    if (match) {
-        const data = calculateGodMode(parseInt(match[1]), parseInt(match[2]), parseInt(match[3]));
-        if (data.error) { bot.sendMessage(msg.chat.id, data.error); return; }
+    try {
+        const match = msg.text.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+        if (match) {
+            const d = parseInt(match[1]);
+            const m = parseInt(match[2]);
+            const y = parseInt(match[3]);
 
-        const response = `
+            const data = calculateGodMode(d, m, y);
+            if (data.error) {
+                 bot.sendMessage(msg.chat.id, data.error);
+                 return;
+            }
+
+            const response = `
 ╭━━━━━━━━━━━━━━━━━━━╮
       🧬 **LIFE PROFILE** 
 ╰━━━━━━━━━━━━━━━━━━━╯
@@ -90,13 +114,18 @@ bot.on('message', async (msg) => {
 🎂 **Age:** ${data.age}
 🔮 **Zodiac:** ${data.zodiac}
 
+❤️ **Heartbeats:** ${data.heartbeats}
 🏆 **Next Milestone:**
 ${data.milestoneDays}th Day on: ${data.milestoneDate}
+
 🎉 **B'day In:** ${data.nextBday} Days
 
 _Designed for Legends 👑_
-👨‍💻 **Developer by Rahul Kumar Singh**
-`;
-        bot.sendMessage(msg.chat.id, response, { parse_mode: 'Markdown' });
+👨‍💻 **Developer by Rahul Kumar Singh**`;
+            
+            bot.sendMessage(msg.chat.id, response, { parse_mode: 'Markdown' });
+        }
+    } catch (error) {
+        console.log("Message Error:", error);
     }
 });
