@@ -10,8 +10,7 @@ app.get('/', (req, res) => res.send('<h1>💎 GOD MODE BOT ACTIVE</h1>'));
 app.listen(port, '0.0.0.0', () => console.log(`🚀 Server running on port ${port}`));
 
 // --- 2. BOT CONFIG ---
-const token = '8507736406:AAEatnjG-ChvUO2uqRP9MBgcfyvV3W324O4
-'; 
+const token = '8507736406:AAEatnjG-ChvUO2uqRP9MBgcfyvV3W324O4'; 
 const bot = new TelegramBot(token, {polling: true});
 
 // --- 3. ADVANCED LOGIC BRAIN ---
@@ -129,7 +128,7 @@ bot.on('message', async (msg) => {
              return;
         }
 
-        // --- THE GOD LEVEL DESIGN (UPDATED WITH DEV NAME) ---
+        // --- THE GOD LEVEL DESIGN ---
         const response = `
 ╭━━━━━━━━━━━━━━━━━━━╮
       🧬 **LIFE PROFILE ANALYZER** 
@@ -157,9 +156,8 @@ bot.on('message', async (msg) => {
 ╰───────────────────────
 
 _Designed for Legends 👑_
-━━━━━━━━━━━━━━━━━━━━━
-👨‍💻 *Developer by Rahul Kumar Singh*
-━━━━━━━━━━━━━━━━━━━━━
+
+👨‍💻 **Developer by Rahul Kumar Singh**
 `;
 
         bot.sendChatAction(msg.chat.id, 'typing');
